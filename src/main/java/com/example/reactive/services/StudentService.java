@@ -3,6 +3,7 @@ package com.example.reactive.services;
 import com.example.reactive.dao.student.StudentDAO;
 import com.example.reactive.dto.StudentDTO;
 import com.example.reactive.entities.Student;
+import com.mongodb.client.result.DeleteResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -58,16 +59,16 @@ public class StudentService {
 
     }
 
-    public void deleteStudent(String id) {
-        studentDAO.deleteStudent(id);
+    public Mono<DeleteResult> deleteStudent(String id) {
+        return studentDAO.deleteStudent(id);
     }
 
     public Mono<Boolean> EnrollStudentIntoCourse(String studentId, String courseId) {
         return studentDAO.EnrollIntoCourse(studentId, courseId);
     }
 
-    public void UnenrolLStudentFromCourse(String studentId, String courseId) {
-        studentDAO.UnenrollFromCourse(studentId, courseId);
+    public Mono<DeleteResult> UnenrolLStudentFromCourse(String studentId, String courseId) {
+        return studentDAO.UnenrollFromCourse(studentId, courseId);
     }
 
 }

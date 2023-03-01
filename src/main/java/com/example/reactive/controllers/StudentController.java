@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin
@@ -25,7 +24,7 @@ public class StudentController {
     public Mono<ResponseEntity<Flux<StudentDTO>>> getStudents() {
         Flux<StudentDTO> students = studentService.getAllStudents();
         return students.hasElements().map(e -> {
-            if(e)
+            if (e)
                 return ResponseEntity.of(Optional.of(students));
             else
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -35,8 +34,8 @@ public class StudentController {
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Mono<StudentDTO>>> getStudent(@PathVariable String id) {
         Mono<StudentDTO> student = studentService.getStudent(id);
-        return student.hasElement().map(e ->{
-            if(e)
+        return student.hasElement().map(e -> {
+            if (e)
                 return ResponseEntity.of(Optional.of(student));
             else
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -70,9 +69,13 @@ public class StudentController {
     //Delete specific student
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteStudent(@PathVariable String id) {
-        studentService.deleteStudent(id);
-        return ResponseEntity.of(Optional.of("Course Deleted Successfully !"));
+    public Mono<ResponseEntity<String>> deleteStudent(@PathVariable String id) {
+        return studentService.deleteStudent(id).map(deleteResult -> {
+            if (deleteResult.wasAcknowledged())
+                return ResponseEntity.of(Optional.of("Course Deleted Successfully !"));
+            else
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        });
     }
 
     //Enroll student in course
@@ -88,9 +91,14 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}/courses/{courseId}")
-    public ResponseEntity<String> unenrollFromCourse(@PathVariable String id, @PathVariable String courseId) {
-        studentService.UnenrolLStudentFromCourse(id, courseId);
-        return ResponseEntity.of(Optional.of("Successfully Unenrolled from Course !"));
+    public Mono<ResponseEntity<String>> unenrollFromCourse(@PathVariable String id, @PathVariable String courseId) {
+        return studentService.UnenrolLStudentFromCourse(id, courseId).map(deleteResult -> {
+            if (deleteResult.wasAcknowledged()) {
+                return ResponseEntity.of(Optional.of("Successfully Unenrolled from Course !"));
+            } else {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            }
+        });
     }
 
 }

@@ -2,6 +2,8 @@ package com.example.reactive.dao.student;
 
 import com.example.reactive.dto.StudentDTO;
 import com.example.reactive.entities.Student;
+import com.example.reactive.entities.Student_Course;
+import com.mongodb.client.result.DeleteResult;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,9 +20,9 @@ public interface StudentRepository {
 
     Mono<Student> updateStudent(Student student);
 
-    void deleteStudent(String id);
+    Mono<DeleteResult> deleteStudent(String id);
 
-    Mono<Boolean> EnrollStudentInCourse(String studentId, String courseId);
+    Mono<Student_Course> EnrollStudentInCourse(String studentId, String courseId);
 
-    void UnenrollStudentFromCourse(String studentId, String courseId);
+    Mono<DeleteResult> UnenrollStudentFromCourse(String studentId, String courseId);
 }

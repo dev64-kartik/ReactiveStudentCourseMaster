@@ -3,6 +3,7 @@ package com.example.reactive.dao.course;
 import com.example.reactive.dto.CourseDTO;
 import com.example.reactive.entities.Course;
 import com.example.reactive.entities.Student_Course;
+import com.mongodb.client.result.DeleteResult;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.FindAndReplaceOptions;
@@ -86,9 +87,15 @@ public class CourseRepositoryImpl implements CourseRepository{
     }
 
     @Override
-    public void deleteCourse(String id) {
+    public Mono<DeleteResult> deleteCourse(String id) {
         Query query = new Query(Criteria.where("courseId").is(id));
-        reactiveMongoTemplate.remove(query, Course.class).subscribe();
-        reactiveMongoTemplate.remove(query, Student_Course.class).subscribe();
+        return reactiveMongoTemplate.remove(query, Course.class).flatMap(deleteResult -> {
+            if(deleteResult.wasAcknowledged())
+                return reactiveMongoTemplate.remove(query, Student_Course.class);
+            else
+                return Mono.just(deleteResult);
+
+        });
+
     }
 }

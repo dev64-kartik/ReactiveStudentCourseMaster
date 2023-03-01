@@ -3,6 +3,7 @@ package com.example.reactive.dao.student;
 import com.example.reactive.dto.StudentDTO;
 import com.example.reactive.entities.Student;
 import com.example.reactive.entities.Student_Course;
+import com.mongodb.client.result.DeleteResult;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.FindAndReplaceOptions;
@@ -23,8 +24,12 @@ import java.util.List;
 @Repository
 public class StudentRepositoryImpl implements StudentRepository {
 
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
+
     @Autowired
-    private ReactiveMongoTemplate reactiveMongoTemplate;
+    public StudentRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate) {
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
+    }
 
 
     private List<AggregationOperation> AggregationTemplate() {
@@ -86,30 +91,35 @@ public class StudentRepositoryImpl implements StudentRepository {
     }
 
     @Override
-    public void deleteStudent(String id) {
+    public Mono<DeleteResult> deleteStudent(String id) {
         Query query = new Query(Criteria.where("studentId").is(id));
-        reactiveMongoTemplate.remove(query, Student.class).subscribe();
-        reactiveMongoTemplate.remove(query, Student_Course.class).subscribe();
+        return reactiveMongoTemplate.remove(query, Student.class).flatMap(deleteResult -> {
+            if (deleteResult.wasAcknowledged()) {
+                return reactiveMongoTemplate.remove(query, Student_Course.class);
+            } else {
+                return Mono.just(deleteResult);
+            }
+        });
     }
 
     @Override
-    public Mono<Boolean> EnrollStudentInCourse(String studentId, String courseId) {
+    public Mono<Student_Course> EnrollStudentInCourse(String studentId, String courseId) {
         Student_Course studentCourse = new Student_Course(new ObjectId(studentId), new ObjectId(courseId));
         return reactiveMongoTemplate.exists(new Query(Criteria.where("studentId").is(new ObjectId(studentId)).and("courseId").is(new ObjectId(courseId))), Student_Course.class)
                 .flatMap(isEnrolled -> {
-                    if (isEnrolled)
-                        return Mono.just(false);
-                    else {
-                        reactiveMongoTemplate.insert(studentCourse).subscribe();
-                        return Mono.just(true);
+                    if (isEnrolled) {
+                        Mono<Student_Course> scs = Mono.empty();
+                        return scs;
+                    } else {
+                        return reactiveMongoTemplate.insert(studentCourse);
                     }
                 });
     }
 
     @Override
-    public void UnenrollStudentFromCourse(String studentId, String courseId) {
+    public Mono<DeleteResult> UnenrollStudentFromCourse(String studentId, String courseId) {
         Query query = new Query(Criteria.where("studentId").is(new ObjectId(studentId))
                 .and("courseId").is(new ObjectId(courseId)));
-        reactiveMongoTemplate.remove(query, Student_Course.class).subscribe();
+        return reactiveMongoTemplate.remove(query, Student_Course.class);
     }
 }

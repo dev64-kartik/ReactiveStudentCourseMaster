@@ -2,6 +2,7 @@ package com.example.reactive.dao.student;
 
 import com.example.reactive.dto.StudentDTO;
 import com.example.reactive.entities.Student;
+import com.mongodb.client.result.DeleteResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -30,16 +31,21 @@ public class StudentDAO {
         return studentRepository.updateStudent(student);
     }
 
-    public void deleteStudent(String id) {
-        studentRepository.deleteStudent(id);
+    public Mono<DeleteResult> deleteStudent(String id) {
+        return studentRepository.deleteStudent(id);
     }
 
     public Mono<Boolean> EnrollIntoCourse(String studentId, String courseId) {
-        return studentRepository.EnrollStudentInCourse(studentId, courseId);
+        return studentRepository.EnrollStudentInCourse(studentId, courseId).hasElement().flatMap(e ->{
+            if(e)
+                return Mono.just(true);
+            else
+                return Mono.just(false);
+        });
     }
 
-    public void UnenrollFromCourse(String studentId, String courseId) {
-        studentRepository.UnenrollStudentFromCourse(studentId, courseId);
+    public Mono<DeleteResult> UnenrollFromCourse(String studentId, String courseId) {
+        return studentRepository.UnenrollStudentFromCourse(studentId, courseId);
     }
 
 }

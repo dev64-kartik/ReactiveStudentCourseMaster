@@ -2,6 +2,7 @@ package com.example.reactive.dao.course;
 
 import com.example.reactive.dto.CourseDTO;
 import com.example.reactive.entities.Course;
+import com.mongodb.client.result.DeleteResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -31,8 +32,8 @@ public class CourseDAO {
         return courseRepository.updateCourse(newCourse);
     }
 
-    public void deleteCourse(String id) {
-        courseRepository.deleteCourse(id);
+    public Mono<DeleteResult> deleteCourse(String id) {
+        return courseRepository.deleteCourse(id);
     }
 
 }
